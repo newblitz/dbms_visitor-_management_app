@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom styles for the app */
+.visitor-photo {
+  @apply aspect-square object-cover rounded-md;
+}
+
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-md;
+}
+
+.sidebar-item {
+  @apply flex items-center px-4 py-3 text-neutral-700 hover:bg-primary/10 hover:text-primary rounded-md mx-2 transition-colors;
+}
+
+.sidebar-item.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+
+.stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6;
+}
+
+.webcam-container {
+  @apply relative w-full aspect-square rounded-md overflow-hidden border border-input bg-background;
+}
