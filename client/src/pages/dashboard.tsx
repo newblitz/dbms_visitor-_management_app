@@ -43,16 +43,16 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-lg shadow-md border border-purple-100">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
             <div className="space-y-3">
-              <a href="#" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
+              <a href="/guard/register" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
                 Register New Visitor
               </a>
-              <a href="#" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
+              <a href="/host/approve" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
                 Approve Visitors
               </a>
-              <a href="#" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
+              <a href="/guard/visitors" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
                 Check-in Visitor
               </a>
-              <a href="#" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
+              <a href="/admin/users" className="block p-3 bg-purple-100 hover:bg-purple-200 rounded-lg font-medium text-purple-800 transition">
                 Manage Users
               </a>
             </div>

@@ -47,6 +47,21 @@ function Router() {
       {/* For now, let's simplify the routing to resolve the initial loading issue */}
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
+      
+      {/* Guard Routes */}
+      <Route path="/guard/register" component={RegisterVisitor} />
+      <Route path="/guard/visitors" component={VisitorsList} />
+      
+      {/* Host Routes */}
+      <Route path="/host/approve" component={ApproveVisitors} />
+      <Route path="/host/history" component={VisitorHistory} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin/users" component={UsersPage} />
+      <Route path="/admin/settings" component={SettingsPage} />
+      <Route path="/admin/devices" component={DevicesPage} />
+      <Route path="/admin/reports" component={ReportsPage} />
+      
       <Route path="/" component={Login} />
       <Route component={NotFound} />
     </Switch>

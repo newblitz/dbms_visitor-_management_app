@@ -1,253 +1,214 @@
 import { useState } from "react";
-import { Layout } from "@/components/layout/layout";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Visitor, VisitorStatus } from "@shared/schema";
+import { VisitorStatus } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { formatDistanceToNow } from "date-fns";
-import { Search, Check, LogOut } from "lucide-react";
 
 export default function VisitorsList() {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  
-  const { data: visitors, isLoading } = useQuery<Visitor[]>({
-    queryKey: ['/api/visitors'],
-  });
-  
-  const checkInMutation = useMutation({
-    mutationFn: async (visitorId: number) => {
-      return await apiRequest("PATCH", `/api/visitors/${visitorId}/status`, {
-        status: VisitorStatus.CHECKED_IN
-      });
+  const [visitors, setVisitors] = useState([
+    { 
+      id: 1, 
+      name: "John Smith", 
+      purpose: "Meeting", 
+      host: "Sarah Johnson", 
+      company: "ABC Corp", 
+      phone: "555-1234", 
+      email: "john@example.com",
+      status: VisitorStatus.APPROVED,
+      checkinTime: null,
+      checkoutTime: null
     },
-    onSuccess: () => {
+    { 
+      id: 2, 
+      name: "Emma Watson", 
+      purpose: "Interview", 
+      host: "Michael Brown", 
+      company: "XYZ Inc", 
+      phone: "555-5678", 
+      email: "emma@example.com",
+      status: VisitorStatus.APPROVED,
+      checkinTime: null,
+      checkoutTime: null
+    },
+    { 
+      id: 3, 
+      name: "Robert Wilson", 
+      purpose: "Delivery", 
+      host: "Emma Davis", 
+      company: "123 Industries", 
+      phone: "555-9012", 
+      email: "robert@example.com",
+      status: VisitorStatus.CHECKED_IN,
+      checkinTime: "10:30 AM",
+      checkoutTime: null
+    },
+    { 
+      id: 4, 
+      name: "Jennifer Lopez", 
+      purpose: "Maintenance", 
+      host: "David Lee", 
+      company: "Maintenance Co", 
+      phone: "555-3456", 
+      email: "jennifer@example.com",
+      status: VisitorStatus.CHECKED_IN,
+      checkinTime: "11:45 AM",
+      checkoutTime: null
+    }
+  ]);
+
+  const [processingId, setProcessingId] = useState<number | null>(null);
+
+  const handleCheckIn = (id: number) => {
+    setProcessingId(id);
+    setTimeout(() => {
+      setVisitors(visitors.map(visitor => 
+        visitor.id === id ? { 
+          ...visitor, 
+          status: VisitorStatus.CHECKED_IN, 
+          checkinTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        } : visitor
+      ));
+      setProcessingId(null);
+      
       toast({
         title: "Visitor checked in",
-        description: "Visitor has been successfully checked in.",
+        description: "Visitor has been successfully checked in",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/visitors'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Failed to check in visitor",
-        description: (error as Error).message || "Something went wrong.",
-      });
-    },
-  });
-  
-  const checkOutMutation = useMutation({
-    mutationFn: async (visitorId: number) => {
-      return await apiRequest("PATCH", `/api/visitors/${visitorId}/status`, {
-        status: VisitorStatus.CHECKED_OUT
-      });
-    },
-    onSuccess: () => {
+    }, 500);
+  };
+
+  const handleCheckOut = (id: number) => {
+    setProcessingId(id);
+    setTimeout(() => {
+      setVisitors(visitors.map(visitor => 
+        visitor.id === id ? { 
+          ...visitor, 
+          status: VisitorStatus.CHECKED_OUT, 
+          checkoutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        } : visitor
+      ));
+      setProcessingId(null);
+      
       toast({
         title: "Visitor checked out",
-        description: "Visitor has been successfully checked out.",
+        description: "Visitor has been successfully checked out",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/visitors'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Failed to check out visitor",
-        description: (error as Error).message || "Something went wrong.",
-      });
-    },
-  });
-  
-  // Filter and sort visitors
-  const filteredVisitors = visitors
-    ? visitors
-        .filter(visitor => {
-          // Status filter
-          if (statusFilter !== "all" && visitor.status !== statusFilter) {
-            return false;
-          }
-          
-          // Search filter
-          if (searchTerm) {
-            const searchLower = searchTerm.toLowerCase();
-            return (
-              visitor.name.toLowerCase().includes(searchLower) ||
-              visitor.aadharId.toLowerCase().includes(searchLower) ||
-              visitor.phone.toLowerCase().includes(searchLower) ||
-              (visitor.company && visitor.company.toLowerCase().includes(searchLower)) ||
-              visitor.purpose.toLowerCase().includes(searchLower)
-            );
-          }
-          
-          return true;
-        })
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    : [];
-  
-  const getStatusBadge = (status: VisitorStatus) => {
+    }, 500);
+  };
+
+  const getStatusBadgeClass = (status: VisitorStatus) => {
     switch (status) {
-      case VisitorStatus.APPROVED:
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Approved</Badge>;
-      case VisitorStatus.REJECTED:
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
       case VisitorStatus.PENDING:
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
+        return "bg-yellow-100 text-yellow-800";
+      case VisitorStatus.APPROVED:
+        return "bg-blue-100 text-blue-800";
       case VisitorStatus.CHECKED_IN:
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Checked In</Badge>;
+        return "bg-green-100 text-green-800";
       case VisitorStatus.CHECKED_OUT:
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Checked Out</Badge>;
+        return "bg-gray-100 text-gray-800";
+      case VisitorStatus.REJECTED:
+        return "bg-red-100 text-red-800";
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
-    <Layout title="Visitors List" subtitle="Manage visitor check-ins and check-outs">
-      <Card>
-        <CardHeader>
-          <CardTitle>Visitors</CardTitle>
-          <CardDescription>View and manage all visitors in the system</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-400" />
-              <Input
-                placeholder="Search visitors..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value={VisitorStatus.PENDING}>Pending</SelectItem>
-                <SelectItem value={VisitorStatus.APPROVED}>Approved</SelectItem>
-                <SelectItem value={VisitorStatus.REJECTED}>Rejected</SelectItem>
-                <SelectItem value={VisitorStatus.CHECKED_IN}>Checked In</SelectItem>
-                <SelectItem value={VisitorStatus.CHECKED_OUT}>Checked Out</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-50">
+      <div className="container mx-auto p-8">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-purple-800 mb-2">Visitors List</h1>
+          <p className="text-gray-600">Manage visitor check-ins and check-outs</p>
+        </header>
+
+        <div className="bg-white rounded-lg shadow-md border border-purple-100 p-6">
+          <div className="mb-4 flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Today's Visitors</h2>
+            <button 
+              onClick={() => window.location.href = '/guard/register'} 
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            >
+              Register New Visitor
+            </button>
           </div>
           
-          {isLoading ? (
-            <div className="py-8 text-center text-neutral-500">Loading visitors...</div>
-          ) : filteredVisitors.length === 0 ? (
-            <div className="py-8 text-center text-neutral-500">
-              No visitors found matching the current filters.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Visitor</TableHead>
-                    <TableHead>ID & Phone</TableHead>
-                    <TableHead>Purpose</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredVisitors.map(visitor => (
-                    <TableRow key={visitor.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center space-x-3">
-                          {visitor.photoUrl && (
-                            <img 
-                              src={visitor.photoUrl} 
-                              alt={visitor.name} 
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          )}
-                          <div>
-                            {visitor.name}
-                            {visitor.company && (
-                              <div className="text-xs text-neutral-500">{visitor.company}</div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-xs text-neutral-600">ID: {visitor.aadharId}</div>
-                        <div className="text-xs text-neutral-600">Ph: {visitor.phone}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[200px] truncate" title={visitor.purpose}>
-                          {visitor.purpose}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {formatDistanceToNow(new Date(visitor.createdAt), { addSuffix: true })}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(visitor.status as VisitorStatus)}</TableCell>
-                      <TableCell>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Name</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Purpose</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Host</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Check-in</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Check-out</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visitors.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-4 text-center text-gray-500">
+                      No visitors found
+                    </td>
+                  </tr>
+                ) : (
+                  visitors.map(visitor => (
+                    <tr key={visitor.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium">{visitor.name}</div>
+                        <div className="text-xs text-gray-500">{visitor.phone}</div>
+                      </td>
+                      <td className="py-3 px-4">{visitor.purpose}</td>
+                      <td className="py-3 px-4">{visitor.host}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(visitor.status)}`}>
+                          {visitor.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        {visitor.checkinTime || "-"}
+                      </td>
+                      <td className="py-3 px-4">
+                        {visitor.checkoutTime || "-"}
+                      </td>
+                      <td className="py-3 px-4">
                         {visitor.status === VisitorStatus.APPROVED && (
-                          <Button 
-                            size="sm" 
-                            onClick={() => checkInMutation.mutate(visitor.id)}
-                            disabled={checkInMutation.isPending}
-                            className="bg-blue-600 hover:bg-blue-700"
+                          <button
+                            onClick={() => handleCheckIn(visitor.id)}
+                            disabled={processingId === visitor.id}
+                            className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 mr-2"
                           >
-                            <Check className="mr-1 h-4 w-4" />
-                            Check In
-                          </Button>
+                            {processingId === visitor.id ? "Processing..." : "Check In"}
+                          </button>
                         )}
                         
                         {visitor.status === VisitorStatus.CHECKED_IN && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => checkOutMutation.mutate(visitor.id)}
-                            disabled={checkOutMutation.isPending}
+                          <button
+                            onClick={() => handleCheckOut(visitor.id)}
+                            disabled={processingId === visitor.id}
+                            className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
                           >
-                            <LogOut className="mr-1 h-4 w-4" />
-                            Check Out
-                          </Button>
+                            {processingId === visitor.id ? "Processing..." : "Check Out"}
+                          </button>
                         )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </Layout>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div className="mt-4">
+          <button
+            onClick={() => window.location.href = '/dashboard'}
+            className="text-purple-600 hover:text-purple-800 font-medium"
+          >
+            &larr; Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
