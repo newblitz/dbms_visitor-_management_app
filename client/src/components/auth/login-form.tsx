@@ -35,24 +35,32 @@ export function LoginForm() {
     try {
       setIsLoading(true);
       
-      // Use the auth context's login function
-      const success = await auth.login(data.username, data.password);
+      // For development, simulate different user roles based on username
+      console.log("Login attempt:", data.username, data.password);
       
-      if (success) {
-        // Redirect based on role
-        setTimeout(() => {
-          if (data.username.toLowerCase() === "admin") {
-            window.location.href = '/dashboard';
-          } else if (data.username.toLowerCase() === "guard") {
-            window.location.href = '/guard/register';
-          } else if (data.username.toLowerCase() === "host") {
-            window.location.href = '/host/approve';
-          } else {
-            window.location.href = '/dashboard';
-          }
-        }, 1000);
-      }
+      // Simple direct role-based redirect for now
+      toast({
+        title: "Login successful",
+        description: `Welcome, ${data.username}!`,
+      });
+      
+      // Wait 1 second then redirect based on username
+      setTimeout(() => {
+        console.log("Redirecting based on role:", data.username.toLowerCase());
+        
+        if (data.username.toLowerCase() === "admin") {
+          window.location.href = '/dashboard';
+        } else if (data.username.toLowerCase() === "guard") {
+          window.location.href = '/guard/register';
+        } else if (data.username.toLowerCase() === "host") {
+          window.location.href = '/host/approve';
+        } else {
+          window.location.href = '/dashboard';
+        }
+      }, 1000);
+      
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
