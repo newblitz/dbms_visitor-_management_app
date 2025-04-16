@@ -34,15 +34,37 @@ export function LoginForm() {
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
       setIsLoading(true);
-      // Instead of calling the actual login endpoint, let's simulate a successful login
+      // Simulate role-based login
+      let userRole = "";
+      
+      // Check username to determine role for simulation
+      if (data.username.toLowerCase() === "admin") {
+        userRole = "admin";
+      } else if (data.username.toLowerCase() === "guard") {
+        userRole = "guard";
+      } else if (data.username.toLowerCase() === "host") {
+        userRole = "host";
+      } else {
+        // Default to guard for any other username
+        userRole = "guard";
+      }
+      
       toast({
         title: "Login successful",
-        description: "Welcome to the Visitor Management System!",
+        description: `Welcome, ${data.username}! You are logged in as ${userRole}.`,
       });
       
-      // Redirect to home page after 1 second
+      // Redirect based on role after 1 second
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        if (userRole === "admin") {
+          window.location.href = '/dashboard';
+        } else if (userRole === "guard") {
+          window.location.href = '/guard/register';
+        } else if (userRole === "host") {
+          window.location.href = '/host/approve';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }, 1000);
       
     } catch (error) {

@@ -1,150 +1,161 @@
 import { useState } from "react";
-import { UserRole, VisitorStatus } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { VisitorStatus } from "@shared/schema";
+import { Check, X, Info, Clock } from "lucide-react";
+import { format } from "date-fns";
 
 export default function ApproveVisitors() {
-  const [visitors, setVisitors] = useState([
-    { 
-      id: 1, 
-      name: "John Smith", 
-      purpose: "Interview", 
-      company: "ABC Corp", 
-      phone: "555-1234", 
+  const { toast } = useToast();
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  
+  // Mock data - this would come from API in a real app
+  const [pendingVisitors, setPendingVisitors] = useState([
+    {
+      id: 1,
+      name: "John Smith",
+      purpose: "Job Interview",
+      company: "ABC Corp",
+      phone: "+91 98765 43210",
       email: "john@example.com",
-      status: VisitorStatus.PENDING,
-      createdAt: new Date().toISOString()
+      time: new Date(new Date().getTime() - 30 * 60000).toISOString(),
+      expectedDuration: 60,
+      photo: "https://randomuser.me/api/portraits/men/1.jpg"
     },
-    { 
-      id: 2, 
-      name: "Emma Watson", 
-      purpose: "Meeting", 
-      company: "XYZ Inc", 
-      phone: "555-5678", 
-      email: "emma@example.com",
-      status: VisitorStatus.PENDING,
-      createdAt: new Date().toISOString()
-    },
-    { 
-      id: 3, 
-      name: "Michael Johnson", 
-      purpose: "Site inspection", 
-      company: "123 Industries", 
-      phone: "555-9012", 
-      email: "michael@example.com",
-      status: VisitorStatus.PENDING,
-      createdAt: new Date().toISOString()
+    {
+      id: 2,
+      name: "Mary Johnson",
+      purpose: "Business Meeting",
+      company: "XYZ Industries",
+      phone: "+91 87654 32109",
+      email: "mary@example.com",
+      time: new Date(new Date().getTime() - 15 * 60000).toISOString(),
+      expectedDuration: 45,
+      photo: "https://randomuser.me/api/portraits/women/2.jpg"
     }
   ]);
 
-  const [processingId, setProcessingId] = useState<number | null>(null);
-  const [notes, setNotes] = useState<string>("");
-
   const handleApprove = (id: number) => {
     setProcessingId(id);
+    
+    // Simulate API call
     setTimeout(() => {
-      setVisitors(visitors.map(visitor => 
-        visitor.id === id ? { ...visitor, status: VisitorStatus.APPROVED } : visitor
-      ));
+      setPendingVisitors(pendingVisitors.filter(visitor => visitor.id !== id));
       setProcessingId(null);
-      setNotes("");
-    }, 500);
+      
+      toast({
+        title: "Visitor approved",
+        description: "The visitor has been notified that they can proceed.",
+      });
+    }, 1000);
   };
 
   const handleReject = (id: number) => {
     setProcessingId(id);
+    
+    // Simulate API call
     setTimeout(() => {
-      setVisitors(visitors.map(visitor => 
-        visitor.id === id ? { ...visitor, status: VisitorStatus.REJECTED } : visitor
-      ));
+      setPendingVisitors(pendingVisitors.filter(visitor => visitor.id !== id));
       setProcessingId(null);
-      setNotes("");
-    }, 500);
+      
+      toast({
+        title: "Visitor rejected",
+        description: "The visitor has been notified that they cannot proceed.",
+        variant: "destructive"
+      });
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-50">
       <div className="container mx-auto p-8">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-purple-800 mb-2">Approve Visitors</h1>
-          <p className="text-gray-600">Review and approve visitor requests</p>
+          <h1 className="text-3xl font-bold text-purple-800 mb-2">Pending Visitor Approvals</h1>
+          <p className="text-gray-600">Review and approve visitors waiting to meet you</p>
         </header>
 
-        <div className="bg-white rounded-lg shadow-md border border-purple-100 p-6">
-          <h2 className="text-xl font-semibold mb-4">Pending Visitors</h2>
-          
-          {visitors.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No pending visitors at this time</p>
+        {pendingVisitors.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <Check className="h-8 w-8 text-purple-600" />
             </div>
-          ) : (
-            <div className="space-y-4">
-              {visitors.map(visitor => (
-                <div key={visitor.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{visitor.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {visitor.company && <span className="mr-3">Company: {visitor.company}</span>}
-                        <span className="mr-3">Phone: {visitor.phone}</span>
-                        {visitor.email && <span>Email: {visitor.email}</span>}
-                      </p>
-                      <p className="mt-1"><span className="font-medium">Purpose:</span> {visitor.purpose}</p>
-                      
-                      <div className="mt-3">
-                        <p className="font-medium mb-1">Notes:</p>
-                        <textarea 
-                          className="w-full border rounded p-2 text-sm"
-                          rows={2}
-                          placeholder="Add optional notes about this visitor"
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                        ></textarea>
-                      </div>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-2">All caught up!</h2>
+            <p className="text-gray-600 mb-6">You have no pending visitor requests.</p>
+            <button 
+              onClick={() => window.location.href = '/dashboard'}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {pendingVisitors.map(visitor => (
+              <div key={visitor.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="border-b px-6 py-4 flex justify-between items-center bg-purple-50">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 rounded-full overflow-hidden mr-4 border-2 border-purple-200">
+                      <img 
+                        src={visitor.photo} 
+                        alt={visitor.name} 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    
-                    <div className="flex flex-col justify-center space-y-2 min-w-[150px]">
-                      <div className="flex items-center">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${visitor.status === VisitorStatus.PENDING ? 'bg-yellow-100 text-yellow-800' : 
-                            visitor.status === VisitorStatus.APPROVED ? 'bg-green-100 text-green-800' : 
-                            'bg-red-100 text-red-800'}`}>
-                          {visitor.status}
-                        </span>
-                      </div>
-                      
-                      {visitor.status === VisitorStatus.PENDING && (
-                        <div className="flex space-x-2 mt-2">
-                          <button
-                            onClick={() => handleApprove(visitor.id)}
-                            disabled={processingId === visitor.id}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
-                          >
-                            {processingId === visitor.id ? "Processing..." : "Approve"}
-                          </button>
-                          <button
-                            onClick={() => handleReject(visitor.id)}
-                            disabled={processingId === visitor.id}
-                            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg"
-                          >
-                            {processingId === visitor.id ? "Processing..." : "Reject"}
-                          </button>
-                        </div>
-                      )}
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-800">{visitor.name}</h3>
+                      <p className="text-sm text-gray-600">{visitor.company}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 text-purple-600 mr-1" />
+                    <span className="text-sm text-purple-600">
+                      {format(new Date(visitor.time), "h:mm a")}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Purpose</p>
+                      <p className="text-gray-800">{visitor.purpose}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Duration</p>
+                      <p className="text-gray-800">{visitor.expectedDuration} minutes</p>
+                    </div>
+                  </div>
+                  <div className="mb-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Phone</p>
+                      <p className="text-gray-800">{visitor.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Email</p>
+                      <p className="text-gray-800">{visitor.email || "Not provided"}</p>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <div className="mt-4">
-          <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="text-purple-600 hover:text-purple-800 font-medium"
-          >
-            &larr; Back to Dashboard
-          </button>
-        </div>
+                <div className="px-6 py-4 bg-gray-50 border-t flex justify-between">
+                  <button
+                    onClick={() => handleReject(visitor.id)}
+                    disabled={processingId === visitor.id}
+                    className="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4 inline-block mr-1" />
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => handleApprove(visitor.id)}
+                    disabled={processingId === visitor.id}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    <Check className="h-4 w-4 inline-block mr-1" />
+                    Approve
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { WebcamCapture } from "@/components/ui/webcam";
 
 export default function RegisterVisitor() {
   const { toast } = useToast();
@@ -207,24 +208,36 @@ export default function RegisterVisitor() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Visitor Photo <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-32 h-32 bg-gray-100 border rounded-lg overflow-hidden">
-                      {photoUrl ? (
+                  
+                  {photoUrl ? (
+                    <div className="flex items-center space-x-4">
+                      <div className="w-32 h-32 bg-gray-100 border rounded-lg overflow-hidden">
                         <img src={photoUrl} alt="Visitor" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          No photo
-                        </div>
-                      )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoUrl(null)}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                      >
+                        Reset Photo
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleCapturePhoto}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Capture Photo
-                    </button>
-                  </div>
+                  ) : (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <p className="text-sm text-gray-600 mb-2">Please take a photo of the visitor using the webcam:</p>
+                      <WebcamCapture 
+                        onImageCapture={(imageData) => {
+                          setPhotoUrl(imageData);
+                          toast({
+                            title: "Photo captured",
+                            description: "Visitor photo has been saved",
+                          });
+                        }}
+                        width={320}
+                        height={240}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
