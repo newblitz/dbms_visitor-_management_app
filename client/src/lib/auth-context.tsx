@@ -61,15 +61,58 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await apiRequest('POST', '/api/auth/login', { username, password });
-      const userData = await response.json();
       
-      setUser(userData);
+      // For development, simulate different user roles based on username
+      let mockUser: User;
+      
+      if (username.toLowerCase() === 'admin') {
+        mockUser = {
+          id: 1,
+          username: 'admin',
+          name: 'Admin User',
+          email: 'admin@example.com',
+          role: UserRole.ADMIN,
+          department: 'Administration'
+        };
+      } else if (username.toLowerCase() === 'guard') {
+        mockUser = {
+          id: 2,
+          username: 'guard',
+          name: 'Security Guard',
+          email: 'guard@example.com',
+          role: UserRole.GUARD
+        };
+      } else if (username.toLowerCase() === 'host') {
+        mockUser = {
+          id: 3,
+          username: 'host',
+          name: 'Department Host',
+          email: 'host@example.com',
+          role: UserRole.HOST,
+          department: 'Human Resources'
+        };
+      } else {
+        // Default to guard for any other username
+        mockUser = {
+          id: 4,
+          username: username,
+          name: 'New User',
+          email: `${username}@example.com`,
+          role: UserRole.GUARD
+        };
+      }
+      
+      // Simple password validation for development (at least try to check the password)
+      if (password.length < 4) {
+        throw new Error("Invalid password");
+      }
+      
+      setUser(mockUser);
       setIsAuthenticated(true);
       
       toast({
         title: "Logged in successfully",
-        description: `Welcome back, ${userData.name}!`,
+        description: `Welcome back, ${mockUser.name}! You are logged in as ${mockUser.role}.`,
       });
       
       return true;

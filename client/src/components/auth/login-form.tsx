@@ -19,7 +19,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Shield } from "lucide-react";
 
 export function LoginForm() {
-  const { login } = useAuth();
+  const auth = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -30,43 +30,28 @@ export function LoginForm() {
       password: "",
     },
   });
-  
+
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
       setIsLoading(true);
-      // Simulate role-based login
-      let userRole = "";
       
-      // Check username to determine role for simulation
-      if (data.username.toLowerCase() === "admin") {
-        userRole = "admin";
-      } else if (data.username.toLowerCase() === "guard") {
-        userRole = "guard";
-      } else if (data.username.toLowerCase() === "host") {
-        userRole = "host";
-      } else {
-        // Default to guard for any other username
-        userRole = "guard";
+      // Use the auth context's login function
+      const success = await auth.login(data.username, data.password);
+      
+      if (success) {
+        // Redirect based on role
+        setTimeout(() => {
+          if (data.username.toLowerCase() === "admin") {
+            window.location.href = '/dashboard';
+          } else if (data.username.toLowerCase() === "guard") {
+            window.location.href = '/guard/register';
+          } else if (data.username.toLowerCase() === "host") {
+            window.location.href = '/host/approve';
+          } else {
+            window.location.href = '/dashboard';
+          }
+        }, 1000);
       }
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome, ${data.username}! You are logged in as ${userRole}.`,
-      });
-      
-      // Redirect based on role after 1 second
-      setTimeout(() => {
-        if (userRole === "admin") {
-          window.location.href = '/dashboard';
-        } else if (userRole === "guard") {
-          window.location.href = '/guard/register';
-        } else if (userRole === "host") {
-          window.location.href = '/host/approve';
-        } else {
-          window.location.href = '/dashboard';
-        }
-      }, 1000);
-      
     } catch (error) {
       toast({
         variant: "destructive",
