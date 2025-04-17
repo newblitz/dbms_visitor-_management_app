@@ -13,6 +13,15 @@ import {
   UserRole
 } from "@shared/schema";
 import * as mqtt from "mqtt";
+import { WebSocketServer, WebSocket } from 'ws';
+
+// Extended WebSocket interface for our custom userData
+interface ExtendedWebSocket extends WebSocket {
+  userData?: {
+    role: UserRole;
+    userId: number;
+  };
+}
 
 // Basic session type
 interface SessionData {
@@ -57,6 +66,42 @@ mqttClient.on('message', async (topic, message) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server for real-time updates
+  const wsServer = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Handle WebSocket connections
+  wsServer.on('connection', (socket: ExtendedWebSocket) => {
+    console.log('WebSocket client connected');
+    
+    socket.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received message:', data);
+        
+        // Handle different message types
+        switch (data.type) {
+          case 'register':
+            // Client registration with role
+            socket.userData = {
+              role: data.role,
+              userId: data.userId
+            };
+            socket.send(JSON.stringify({ type: 'registered', success: true }));
+            break;
+            
+          default:
+            console.log('Unknown message type:', data.type);
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+    
+    socket.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
+  });
 
   // Middleware to authenticate user session
   const authenticate = (req: Request, res: Response, next: Function) => {
@@ -305,7 +350,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const visitor = await storage.createVisitor(visitorData);
       
-      // TODO: Send notification to host (simplified for now)
+      // Send real-time notification via WebSocket
+      wsServer.clients.forEach(function(client: ExtendedWebSocket) {
+        if (client.readyState === WebSocket.OPEN && client.userData?.role === UserRole.HOST) {
+          // Send notification to the specific host
+          if (client.userData.userId === visitor.hostId) {
+            client.send(JSON.stringify({
+              type: 'visitor_registered',
+              visitor: visitor
+            }));
+          }
+        }
+        
+        // Broadcast to admin and guard clients
+        if (client.readyState === WebSocket.OPEN && 
+            (client.userData?.role === UserRole.ADMIN || client.userData?.role === UserRole.GUARD)) {
+          client.send(JSON.stringify({
+            type: 'visitor_registered',
+            visitor: visitor
+          }));
+        }
+      });
+      
+      // Log notification for development/debug
       console.log(`Notification to host ${host.email}: New visitor ${visitor.name} is waiting for your approval`);
       
       return res.status(201).json(visitor);
@@ -368,6 +435,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }));
         }
       }
+      
+      // Send real-time update of visitor status via WebSocket
+      wsServer.clients.forEach(function(client: ExtendedWebSocket) {
+        if (client.readyState === WebSocket.OPEN) {
+          const visitorUpdate = {
+            type: status === VisitorStatus.CHECKED_IN ? 'visitor_checked_in' : 
+                  status === VisitorStatus.CHECKED_OUT ? 'visitor_checked_out' : 
+                  'visitor_updated',
+            visitor: updatedVisitor
+          };
+          
+          // Send to relevant clients based on role
+          if (client.userData?.role === UserRole.HOST && client.userData.userId === updatedVisitor.hostId) {
+            // Send to specific host
+            client.send(JSON.stringify(visitorUpdate));
+          } else if (client.userData?.role === UserRole.ADMIN || client.userData?.role === UserRole.GUARD) {
+            // Send to all admins and guards
+            client.send(JSON.stringify(visitorUpdate));
+          }
+        }
+      });
 
       return res.status(200).json(updatedVisitor);
     } catch (error) {
