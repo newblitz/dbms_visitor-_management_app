@@ -19,7 +19,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Shield } from "lucide-react";
 
 export function LoginForm() {
-  const auth = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -31,47 +30,35 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
-    try {
-      setIsLoading(true);
+  const onSubmit = (data: z.infer<typeof loginSchema>) => {
+    setIsLoading(true);
+    console.log("Login attempt:", data.username, data.password);
+    
+    // Simple role-based login without any authentication for demo
+    const username = data.username.toLowerCase();
+    
+    // Show toast
+    toast({
+      title: "Login successful",
+      description: `Welcome, ${data.username}!`,
+    });
+    
+    // Wait a second to show the toast
+    setTimeout(() => {
+      console.log("Redirecting based on role:", username);
       
-      // For development, simulate different user roles based on username
-      console.log("Login attempt:", data.username, data.password);
-      
-      // Simulate the login process with a short delay
-      setTimeout(() => {
-        console.log("Redirecting based on role:", data.username.toLowerCase());
-        
-        toast({
-          title: "Login successful",
-          description: `Welcome, ${data.username}!`,
-        });
-        
-        // Use direct navigation with replace to avoid history issues
-        // This approach works more reliably than the router in this context
-        if (data.username.toLowerCase() === "admin") {
-          window.location.replace('/dashboard');
-        } else if (data.username.toLowerCase() === "guard") {
-          window.location.replace('/guard/register');
-        } else if (data.username.toLowerCase() === "host") {
-          window.location.replace('/host/approve');
-        } else {
-          // Default to guard role
-          window.location.replace('/guard/register');
-        }
-        
-        setIsLoading(false);
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: (error as Error).message || "Something went wrong",
-      });
-      setIsLoading(false);
-    }
+      // Hard navigation based on username - this is the most reliable approach
+      if (username === "admin") {
+        window.location.href = "/dashboard";
+      } else if (username === "guard") {
+        window.location.href = "/guard/register";
+      } else if (username === "host") {
+        window.location.href = "/host/approve"; 
+      } else {
+        // Default to guard role
+        window.location.href = "/guard/register";
+      }
+    }, 1000);
   };
   
   return (

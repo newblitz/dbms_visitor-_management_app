@@ -1,9 +1,9 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { useEffect, useState } from "react";
 import { useAuth } from "./lib/auth-context";
 
 // Pages
-import Login from "@/pages/login";
+import SimpleLogin from "@/pages/simple-login";
 import Dashboard from "@/pages/dashboard";
 import RegisterVisitor from "@/pages/guard/register-visitor";
 import VisitorsList from "@/pages/guard/visitors-list";
@@ -40,66 +40,27 @@ function PrivateRoute({ role, component: Component, ...rest }: { role?: string[]
 }
 
 function Router() {
-  const { isAuthenticated, user } = useAuth();
-
-  useEffect(() => {
-    // Redirect based on role when accessing dashboard directly
-    if (isAuthenticated && user && window.location.pathname === '/dashboard') {
-      switch (user.role) {
-        case 'guard':
-          window.location.href = '/guard/register';
-          break;
-        case 'host':
-          window.location.href = '/host/approve';
-          break;
-        case 'admin':
-          // Admin can stay on the dashboard
-          break;
-        default:
-          break;
-      }
-    }
-  }, [isAuthenticated, user]);
-
   return (
     <Switch>
       {/* Public routes */}
-      <Route path="/login" component={Login} />
+      <Route path="/login" component={SimpleLogin} />
       
       {/* Admin Routes */}
-      <Route path="/dashboard">
-        {isAuthenticated && user?.role === 'admin' ? <Dashboard /> : <Login />}
-      </Route>
-      <Route path="/admin/users">
-        {isAuthenticated && user?.role === 'admin' ? <UsersPage /> : <Login />}
-      </Route>
-      <Route path="/admin/settings">
-        {isAuthenticated && user?.role === 'admin' ? <SettingsPage /> : <Login />}
-      </Route>
-      <Route path="/admin/devices">
-        {isAuthenticated && user?.role === 'admin' ? <DevicesPage /> : <Login />}
-      </Route>
-      <Route path="/admin/reports">
-        {isAuthenticated && user?.role === 'admin' ? <ReportsPage /> : <Login />}
-      </Route>
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/admin/users" component={UsersPage} />
+      <Route path="/admin/settings" component={SettingsPage} />
+      <Route path="/admin/devices" component={DevicesPage} />
+      <Route path="/admin/reports" component={ReportsPage} />
       
       {/* Guard Routes */}
-      <Route path="/guard/register">
-        {isAuthenticated && user?.role === 'guard' ? <RegisterVisitor /> : <Login />}
-      </Route>
-      <Route path="/guard/visitors">
-        {isAuthenticated && user?.role === 'guard' ? <VisitorsList /> : <Login />}
-      </Route>
+      <Route path="/guard/register" component={RegisterVisitor} />
+      <Route path="/guard/visitors" component={VisitorsList} />
       
       {/* Host Routes */}
-      <Route path="/host/approve">
-        {isAuthenticated && user?.role === 'host' ? <ApproveVisitors /> : <Login />}
-      </Route>
-      <Route path="/host/history">
-        {isAuthenticated && user?.role === 'host' ? <VisitorHistory /> : <Login />}
-      </Route>
+      <Route path="/host/approve" component={ApproveVisitors} />
+      <Route path="/host/history" component={VisitorHistory} />
       
-      <Route path="/" component={Login} />
+      <Route path="/" component={SimpleLogin} />
       <Route component={NotFound} />
     </Switch>
   );
