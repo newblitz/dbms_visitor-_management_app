@@ -38,25 +38,29 @@ export function LoginForm() {
       // For development, simulate different user roles based on username
       console.log("Login attempt:", data.username, data.password);
       
-      // Simple direct role-based redirect for now
-      toast({
-        title: "Login successful",
-        description: `Welcome, ${data.username}!`,
-      });
-      
-      // Wait 1 second then redirect based on username
+      // Simulate the login process with a short delay
       setTimeout(() => {
         console.log("Redirecting based on role:", data.username.toLowerCase());
         
+        toast({
+          title: "Login successful",
+          description: `Welcome, ${data.username}!`,
+        });
+        
+        // Use direct navigation with replace to avoid history issues
+        // This approach works more reliably than the router in this context
         if (data.username.toLowerCase() === "admin") {
-          window.location.href = '/dashboard';
+          window.location.replace('/dashboard');
         } else if (data.username.toLowerCase() === "guard") {
-          window.location.href = '/guard/register';
+          window.location.replace('/guard/register');
         } else if (data.username.toLowerCase() === "host") {
-          window.location.href = '/host/approve';
+          window.location.replace('/host/approve');
         } else {
-          window.location.href = '/dashboard';
+          // Default to guard role
+          window.location.replace('/guard/register');
         }
+        
+        setIsLoading(false);
       }, 1000);
       
     } catch (error) {
@@ -66,7 +70,6 @@ export function LoginForm() {
         title: "Login failed",
         description: (error as Error).message || "Something went wrong",
       });
-    } finally {
       setIsLoading(false);
     }
   };

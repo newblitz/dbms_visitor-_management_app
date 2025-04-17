@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { useAuth } from "./lib/auth-context";
 
